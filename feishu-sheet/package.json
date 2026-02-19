@@ -1,0 +1,14 @@
+{
+  "name": "feishu-sheet",
+  "version": "1.0.0",
+  "description": "Read content from Feishu Sheets (spreadsheets) using raw API. Supports dynamic credential discovery from OpenClaw Gateway config.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "fs-extra": "^11.0.0",
+    "minimist": "^1.2.8"
+  }
+}

@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
+const workspaceRoot = path.resolve(__dirname, '../..');
+const skillsDir = path.join(workspaceRoot, 'skills');
+
+const args = process.argv.slice(2);
+const command = args[0];
+
+if (!command || command === 'help' || command === '--help') {
+  console.log('OpenClaw Skills CLI Wrapper');
+  console.log('Usage: openclaw <skill-name> [args...]');
+  console.log('\nAvailable skills (with index.js):');
+  
+  if (fs.existsSync(skillsDir)) {
+    const skills = fs.readdirSync(skillsDir).filter(name => {
+      return fs.existsSync(path.join(skillsDir, name, 'index.js'));
+    });
+    console.log(skills.map(s => `  - ${s}`).join('\n'));
+  } else {
+    console.log('  (No skills directory found)');
+  }
+  process.exit(0);
+}
+
+// Map short aliases if needed
+const aliases = {
+  'evolve': 'evolver',
+  'opt': 'prompt-optimizer'
+};
+
+const skillName = aliases[command] || command;
+const skillPath = path.join(skillsDir, skillName);
+const entryPoint = path.join(skillPath, 'index.js');
+
+if (!fs.existsSync(entryPoint)) {
+  console.error(`Error: Cannot find module '${entryPoint}'`);
+  console.error(`Skill '${skillName}' does not exist or has no index.js.`);
+  process.exit(1);
+}
+
+// Execute the skill
+// We use spawn to run it as a separate process, preserving stdio
+const child = spawn(process.execPath, [entryPoint, ...args.slice(1)], {
+  stdio: 'inherit',
+  cwd: skillPath, // Set CWD to the skill directory so it can find its own relative files
+  env: process.env
+});
+
+child.on('exit', (code) => {
+  process.exit(code);
+});
